@@ -121,7 +121,9 @@ contract ApusProofTask is IProofTask, Ownable {
     }
 
     // 完成Task
-    function proveTask(uint256 _taskId) external {
+    function proveTask(uint64 blockId) external {
+        // 获取taskId
+        uint256 _taskId = blockTasks[blockId];
         // 验证taskId
         require(_taskId > 0 && _taskId <= taskId, "Invalid taskId");
         // 查询任务
@@ -143,12 +145,13 @@ contract ApusProofTask is IProofTask, Ownable {
     // 目前这里仅触发奖励，不做转账, 以后可以考虑Apus的奖励从这里发出
     function reward(uint256 _taskId) internal {
         // 查询任务
-        ApusData.ProofTask memory task = tasks[_taskId];
+        ApusData.ProofTask storage task = tasks[_taskId];
         // 查询任务提供者，并获取其合约地址
         ApusData.TaskType _type = task._type;
         address contractAddr = taskContracts[_type];
         // 在此场景下是调用ApusTaikoProverPool的rewardProver方法
         IReward(contractAddr).reward(task.blockID);
+        task.status = ApusData.TaskStatus.Rewarded;
     }
 
 }
