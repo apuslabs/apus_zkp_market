@@ -44,6 +44,7 @@ library ApusData {
         bytes meta; // 任务携带的元数据
         ApusData.ProofAssignment assigment; // 任务分配信息
         TaskStatus status; // 状态
+        address prover; // 最终证明者
     }
 }
 

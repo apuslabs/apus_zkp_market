@@ -65,11 +65,6 @@ contract ApusTaikoProverPool is IProver, IReward, IERC1271, Ownable {
         proofTaskContract = _proofTaskContract;
     }
 
-    // 获取IProofTask合约地址
-    function getProofTaskContract() external view returns (address) {
-        return proofTaskContract;
-    }
-
     struct Reward {
         address prover;
         uint64 expiry;
@@ -95,7 +90,6 @@ contract ApusTaikoProverPool is IProver, IReward, IERC1271, Ownable {
             result := mload(add(source, 32))
         }
     }
-
 
     // 生成ApusData.ProofAssignment的encode的bytes
     function genProofAssignment(address prover, uint256 clientId, uint256 expiry, bytes calldata signature) public pure returns (bytes memory) {

@@ -3,15 +3,21 @@
 pragma solidity ^0.8.20;
 
 import {Market} from "./market.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import { ApusData } from "./ApusData.sol";
 import { IProofTask, IReward } from "./ApusInterface.sol";
 
-contract ApusProofTask is IProofTask {
+contract ApusProofTask is IProofTask, Ownable {
     uint256 public taskId;
+    mapping(address => bool) public allowedProverList;
 
     Market apusMarket;
 
-    constructor(address marketAddress) {
+    function addAllowedProverAddress(address account) external onlyOwner {
+        allowedProverList[account] = true;
+    }
+
+    constructor(address marketAddress) Ownable(msg.sender) {
         apusMarket = Market(marketAddress);
         taskId = 0;
     }
@@ -102,7 +108,8 @@ contract ApusProofTask is IProofTask {
             blockID: blockId,
             meta: meta,
             assigment: assignment,
-            status: ApusData.TaskStatus.Assigned
+            status: ApusData.TaskStatus.Assigned,
+            prover: address(0)
         });
         // 修改typedTasks，proverTasks，blockTasks
         typedTasks[_type].push(taskId);
@@ -120,16 +127,17 @@ contract ApusProofTask is IProofTask {
         // 查询任务
         ApusData.ProofTask storage task = tasks[_taskId];
         // 验证prover
-        require(msg.sender == task.assigment.prover, "Caller is not the prover");
+        require(msg.sender == task.assigment.prover || allowedProverList[msg.sender], "Caller is not the prover or allowed Prover");
         apusMarket.releaseTaskToClient(task.assigment.prover, task.assigment.clientId);
-
         // 验证任务状态
         require(task.status == ApusData.TaskStatus.Assigned, "Task is not pending or does not exist");
         // 修改task状态为已证明
         task.status = ApusData.TaskStatus.Proved;
-
-        // 调用reward方法
-        reward(_taskId);
+        task.prover = msg.sender;
+        // 调用reward方法，这里还未考虑如果msg.sender != task.assigment.prover的情况，因为抢证明后的利益分配还不明确
+        if (block.timestamp <= task.assigment.expiry) {
+            reward(_taskId);
+        }
     }
 
     // 目前这里仅触发奖励，不做转账, 以后可以考虑Apus的奖励从这里发出
