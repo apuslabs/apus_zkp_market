@@ -134,20 +134,20 @@ contract ApusTaikoProverPool is IProver, IReward, IERC1271, Ownable {
         });
     }
 
-    function reward(uint64 blockId) external payable onlyOwner {
+    function reward(uint64 _blockId) external payable {
+        // 验证只有Task合约或合约拥有者才能调用
+        require(msg.sender == proofTaskContract || msg.sender == owner(), "Only proof task contract or owner can call");
         // 查询奖励
-        Reward memory _reward = rewards[blockId];
-        // 验证奖励是否存在
-        require(_reward.amount > 0, "Reward does not exist");
+        Reward memory _reward = rewards[_blockId];
         // 验证奖励是否已经被领取
         require(!_reward.claimed, "Reward has been claimed");
         // 存到用户的账户余额里，并将该奖励标记为已领取
         balances[_reward.prover] += _reward.amount;
-        rewards[blockId].claimed = true;
+        rewards[_blockId].claimed = true;
         // 调用ERC20合约的reward
         IERC20Rewardable(apusTokenContract).reward(_reward.prover);
         // 触发事件
-        emit RewardTransfered(blockId, _reward.prover, _reward.amount);
+        emit RewardTransfered(_blockId, _reward.prover, _reward.amount);
     }
 
     function withdraw() external {
