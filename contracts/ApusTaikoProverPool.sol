@@ -28,17 +28,14 @@ contract ApusTaikoProverPool is IProver, IReward, IERC1271, Ownable {
     bytes4 private constant _INTERFACE_ID_ERC1271 = 0x1626ba7e;
     IERC20 public ttkojToken;
 
-    constructor(address _ttkojAddress) Ownable(msg.sender) {
-        unchecked {
-            ttkojToken = IERC20(_ttkojAddress);
-        }
-    }
+    constructor() Ownable(msg.sender) {}
 
-    // 定义一个修饰符，用于检查调用者是否是合约的拥有者
-    // modifier onlyOwner {
-    //     require(msg.sender == owner, "Caller is not owner");
-    //     _;
-    // }
+    // 设置Apus ERC20合约地址，暂未验证是否支持ERC20接口和IERC20Rewardable
+    function setTtkojToken(address _ttkojToken) external onlyOwner {
+        ttkojToken = IERC20(_ttkojToken);
+        // require(ttkojToken.supportsInterface(type(IERC20).interfaceId), "ERC20 interface not supported");
+        // require(ttkojToken.supportsInterface(type(IERC20Rewardable).interfaceId), "IERC20Rewardable interface not supported");
+    }
 
     // IProofTask合约地址
     address public proofTaskContract;
