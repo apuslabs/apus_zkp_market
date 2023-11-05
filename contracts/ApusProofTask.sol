@@ -29,13 +29,7 @@ contract ApusProofTask is IProofTask, Ownable {
         bytes meta,
         ApusData.ProofAssignment assignment
     );
-
-    event RewardSent(
-        uint256 taskId,
-        address prover,
-        uint256 amount
-    );
-
+    
     // 保存所有的Task，以任务ID为键
     mapping(uint256 => ApusData.ProofTask) public tasks;
 

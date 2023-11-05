@@ -16,8 +16,8 @@ interface IERC1271 {
 
 
 // 创建一个接口来表示 ERC20 代币合约
-interface IERC20Mintable {
-    function mint(address to, uint256 amount) external;
+interface IERC20Rewardable {
+    function reward(address _prover) external;
 }
 
 contract ApusTaikoProverPool is IProver, IReward, IERC1271, Ownable {
@@ -44,6 +44,8 @@ contract ApusTaikoProverPool is IProver, IReward, IERC1271, Ownable {
     address public proofTaskContract;
     // Apus ERC20合约地址
     address public apusTokenContract;
+    // 每个用户的账户余额
+    mapping(address => uint256) public balances;
 
     function isValidSignature(bytes32 _messageHash, bytes memory _signature) public view override returns (bytes4 magicValue) {
         address signer = _messageHash.recover(_signature);
@@ -69,10 +71,16 @@ contract ApusTaikoProverPool is IProver, IReward, IERC1271, Ownable {
         address prover;
         uint64 expiry;
         uint256 amount;
+        bool claimed;
     }
     
     event RewardTransfered(
         uint64 blockId,
+        address prover,
+        uint256 amount
+    );
+
+    event Withdrawn(
         address prover,
         uint256 amount
     );
@@ -120,23 +128,38 @@ contract ApusTaikoProverPool is IProver, IReward, IERC1271, Ownable {
         rewards[blockId] = Reward({
             prover: apusAssignment.prover,
             expiry: assignment.expiry,
-            amount: msg.value
+            amount: msg.value,
+            claimed: false
         });
     }
 
     function reward(uint64 blockId) external payable onlyOwner {
         // 查询奖励
-        Reward memory rewardList = rewards[blockId];
-        // 发送奖励
-        payable(rewardList.prover).transfer(rewardList.amount);
+        Reward memory _reward = rewards[blockId];
+        // 验证奖励是否存在
+        require(_reward.amount > 0, "Reward does not exist");
+        // 验证奖励是否已经被领取
+        require(!_reward.claimed, "Reward has been claimed");
+        // 存到用户的账户余额里，并将该奖励标记为已领取
+        balances[_reward.prover] += _reward.amount;
+        rewards[blockId].claimed = true;
+        // 调用ERC20合约的reward
+        IERC20Rewardable(apusTokenContract).reward(_reward.prover);
         // 触发事件
-        emit RewardTransfered(blockId, rewardList.prover, rewardList.amount);
+        emit RewardTransfered(blockId, _reward.prover, _reward.amount);
     }
 
-    function rewardApusToken(uint256 amount) external onlyOwner {
-        // ERC20合约 mint token
-        IERC20Mintable(apusTokenContract).mint(address(this), amount);
-        // 分配token，待定
+    function withdraw() external {
+        // 查询用户的账户余额
+        uint256 amount = balances[msg.sender];
+        // 验证余额
+        require(amount > 0, "Insufficient balance");
+        // 将用户的账户余额清零
+        balances[msg.sender] = 0;
+        // 转账给用户
+        payable(msg.sender).transfer(amount);
+        // 触发提现事件
+        emit Withdrawn(msg.sender, amount);
     }
 
     function approveTTKOj(address _spender, uint256 _value) external onlyOwner {
