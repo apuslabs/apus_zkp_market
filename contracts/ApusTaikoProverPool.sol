@@ -28,19 +28,23 @@ contract ApusTaikoProverPool is IProver, IReward, IERC1271, Ownable {
     bytes4 private constant _INTERFACE_ID_ERC1271 = 0x1626ba7e;
     IERC20 public ttkojToken;
 
-    constructor() Ownable(msg.sender) {}
-
-    // 设置Apus ERC20合约地址，暂未验证是否支持ERC20接口和IERC20Rewardable
-    function setTtkojToken(address _ttkojToken) external onlyOwner {
+    constructor(address _ttkojToken) Ownable(msg.sender) {
         ttkojToken = IERC20(_ttkojToken);
-        // require(ttkojToken.supportsInterface(type(IERC20).interfaceId), "ERC20 interface not supported");
-        // require(ttkojToken.supportsInterface(type(IERC20Rewardable).interfaceId), "IERC20Rewardable interface not supported");
     }
+
 
     // IProofTask合约地址
     address public proofTaskContract;
     // Apus ERC20合约地址
     address public apusTokenContract;
+    
+    // 设置Apus ERC20合约地址，暂未验证是否支持ERC20接口和IERC20Rewardable
+    function setApusTokenContract(address _apusToken) external onlyOwner {
+        apusTokenContract = _apusToken;
+        // require(ttkojToken.supportsInterface(type(IERC20).interfaceId), "ERC20 interface not supported");
+        // require(ttkojToken.supportsInterface(type(IERC20Rewardable).interfaceId), "IERC20Rewardable interface not supported");
+    }
+
     // 每个用户的账户余额
     mapping(address => uint256) public balances;
 
