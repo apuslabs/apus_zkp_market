@@ -6,7 +6,7 @@ import sys
 # Localhost
 url = 'http://1.117.58.173:8545'
 chain_id = 1337
-gas_limit = 1000000  # 您可能需要根据合约函数的复杂性和资源消耗进行调整
+gas_limit = 3000000  # 您可能需要根据合约函数的复杂性和资源消耗进行调整
 
 env = dict()
 with open(".env", "r") as file:
@@ -36,15 +36,20 @@ public_to_private_keys = {
 # url = 'https://sepolia-rpc.scroll.io'
 # chain_id = 534351
 
-# public_to_private_keys = {
-#     '0xe8fa1Dc4d23c54C3C03fcF25EECa7E0Ff882a75e' :'6e84d87f7029357a2c236ddca1f5ec4fc289fff0ff06c70a1e5500e6a22b48b0'
-# }
+# Taiko Jolnir
+url = 'https://rpc.jolnir.taiko.xyz'
+chain_id = 167007
+
+
+public_to_private_keys = {
+    '0x863c9b8159B3F95687a600B1b21aE159618b31b1': '082994a2939818f4d539c7704cdd64a8ba20caf326b2cf731db5b2249c18c985'
+}
 
 
 class _role:
-    _contract_owner = '0xC2600C80Beb521CC4E2f1b40B9D169c46E391390'
-    _provider = '0xC2600C80Beb521CC4E2f1b40B9D169c46E391390'
-    _user = '0xC2600C80Beb521CC4E2f1b40B9D169c46E391390'
+    _contract_owner = '0x863c9b8159B3F95687a600B1b21aE159618b31b1'
+    _provider = '0x863c9b8159B3F95687a600B1b21aE159618b31b1'
+    _user = '0x863c9b8159B3F95687a600B1b21aE159618b31b1'
 
     @classmethod
     def private_key(cls, public_key):
@@ -68,6 +73,7 @@ role = _role()
 
 def get_config(fileName):
     return json.load(open(os.path.join(os.getcwd(), "build/contract_address", fileName)))['address'], json.load(open(os.path.join(os.getcwd(), "build/contracts", fileName)))['abi']
+
 
 market_contract_address, market_abi = get_config("Market.json")
 apus_task_address, apus_task_abi = get_config('ApusProofTask.json')
